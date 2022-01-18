@@ -13,8 +13,9 @@
           class="el-menu-vertical-demo"
           unique-opened
           router
-          style="min-height: calc(100vh - 50px);
+          style="height: calc(100vh - 60px);
                  width: 250px;
+                 margin-top: 10px;
                  margin-left: 15vw;"
           @open="handleOpen"
           @close="handleClose">

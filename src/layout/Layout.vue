@@ -11,7 +11,7 @@
     <Header/>
     <div style="display: flex">
       <!--侧边栏导入-->
-      <Aside v-show="path !== '/'"/>
+      <Aside v-show="path !== '/home'"/>
 
       <!--路由导入-->
       <router-view style="flex: 1" />
@@ -33,6 +33,8 @@ export default {
   components: {
     Header,
     Aside
+  },
+  methods:{
   },
   // 判断路由
   mounted() {

@@ -1,0 +1,826 @@
+<!--// @ClassName: test-->
+<!--// @Author: XIAO SIYU-->
+<!--// @Date: 2021/12/31 22:38-->
+<!--// @Version: 1.0-->
+<!--// @Description: TODO-->
+
+<!--<template>-->
+<!--  <div >-->
+<!--    &lt;!&ndash; public\fbx\10dong.fbx &ndash;&gt;-->
+<!--    <model-fbx src="static/model/Dying.fbx"></model-fbx>-->
+
+<!--  </div>-->
+<!--</template>-->
+
+<!--<script>-->
+<!--import {ModelFbx} from "vue-3d-model";-->
+<!--export default {-->
+<!--  name: 'test',-->
+<!--  components: {-->
+<!--    ModelFbx-->
+<!--  },-->
+<!--}-->
+<!--</script>-->
+
+<template>
+  <div id="contain">
+    <BreadCrumb/>
+  </div>
+</template>
+
+<script>
+import * as THREE from "three/build/three.module";
+import Stats from "three/examples/jsm/libs/stats.module.js";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader";
+import {inflate} from "three/examples/jsm/libs/fflate.module.js"
+import BreadCrumb from "../components/BreadCrumb";
+
+export default{
+  name:'test',
+  components:{
+    BreadCrumb
+  },
+  data(){
+    return {
+      camera: null,
+      scene: null,
+      renderer: null,
+      controls: null,
+      mixer:null,
+      mixers:[],
+      clock: new THREE.Clock(),
+      modelPath: "static/model/Dancing.fbx"
+    }
+  },
+  methods:{
+    init() {
+      let self = this;
+
+      let container = document.getElementById("contain");
+      // let mouse = new THREE.Vector2();
+      self.camera = new THREE.PerspectiveCamera(
+          45,
+          container.clientWidth / container.clientHeight,
+          0.01,
+          2000
+      );
+      self.camera.position.set(0, 100, 100);
+      self.scene = new THREE.Scene();
+      // 地板
+      var mesh = new THREE.Mesh(
+          new THREE.PlaneBufferGeometry(2000, 2000),
+          new THREE.MeshPhongMaterial({ color: 0x999999, depthWrite: false })
+      );
+      mesh.rotation.x = -Math.PI / 2;
+      mesh.receiveShadow = true;
+      self.scene.add(mesh);
+
+      //底部网格
+      var grid = new THREE.GridHelper(2000, 200, 0x000000, 0x000000);
+      grid.material.opacity = 0.2;
+      grid.material.transparent = true;
+      self.scene.add(grid);
+
+      self.renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true,
+        precision: "highp"
+      });
+      self.renderer.setSize(container.clientWidth, container.clientHeight);
+      container.appendChild(self.renderer.domElement)
+
+      //交互
+      self.controls = new OrbitControls(self.camera, self.renderer.domElement);
+      self.controls.target.set(0, 50, 0);
+      self.controls.update();
+
+      //光照
+      var light = new THREE.HemisphereLight(0xffffff, 0x444444);
+      light.position.set(0, 200, 0);
+      self.scene.add(light);
+
+      light = new THREE.DirectionalLight(0xffffff);
+      light.position.set(0, 200, 100);
+      light.castShadow = true;
+      light.shadow.camera.top = 180;
+      light.shadow.camera.bottom = -100;
+      light.shadow.camera.left = -120;
+      light.shadow.camera.right = 120;
+      self.scene.add(light);
+      const mixers = self.mixers;
+      const fbxLoader = new FBXLoader();
+      fbxLoader.load(self.modelPath, function(object) {
+        object.mixer = new THREE.AnimationMixer(object);
+        mixers.push(object.mixer)
+        var action = object.mixer.clipAction(object.animations[0]);
+        action.play();
+        object.scale.multiplyScalar(.5);
+        self.scene.add(object);
+      });
+    },
+    animate() {
+      requestAnimationFrame(this.animate);
+      // console.log(mixers)
+      if (this.mixers.length > 0) {
+        for (let i = 0; i < this.mixers.length; i ++) {
+          this.mixers[i].update(this.clock.getDelta());
+        }
+      }
+      this.renderer.render(this.scene, this.camera);
+    }
+  },
+  mounted() {
+    this.init();
+    this.animate();
+  }
+
+}
+</script>
+
+<style lang="less">
+#contain{
+  width: 50vw;
+  canvas{
+    width: calc(70vw - 250px) !important;
+    height: 70vh !important;
+  }
+}
+</style>
+
+
+<!--<template>-->
+<!--  <div>-->
+<!--    <el-dialog-->
+<!--        title="模型预览"-->
+<!--        :visible.sync="modelopen"-->
+<!--        width="60%"-->
+<!--        @open="opendialog"-->
+<!--        class="yzqmodeldialog"-->
+<!--    >-->
+<!--      <div id="fullcontent">-->
+<!--        <div style="display:flex;text-align:right">-->
+<!--          &lt;!&ndash; 测量连线模式 &ndash;&gt;-->
+<!--          <div style="text-align:right;margin:10px 0;width:100%;margin-right:10px;opacity: 0;" @click="measuretypeclick(0)" id="zhixian">-->
+<!--            <i class="iconfont icon-zhixian" ></i>-->
+<!--          </div>-->
+<!--          <div style="text-align:right;margin:10px 0;margin-right:10px;opacity: 0;" @click="measuretypeclick(1)" id="quxian">-->
+<!--            <i class="iconfont icon-quxian" ></i>-->
+<!--          </div>-->
+
+<!--          <div style="text-align:right;margin:10px 0;margin-right:10px" @click="measure">-->
+<!--            <i class="iconfont icon-chizi" id="chiziicon"></i>-->
+<!--          </div>-->
+<!--          <div style="text-align:right;margin:10px 0" @click="fillwindow">-->
+<!--            <i class="iconfont icon-quanping"></i>-->
+<!--          </div>-->
+
+<!--        </div>-->
+
+<!--        <div id="container3d" v-loading="vloading" style="height: 500px;-->
+<!--        width: 100%;position:relative"  @mousedown="onMouseDown" @mouseup="onMouseUp">-->
+<!--        </div>-->
+<!--      </div>-->
+
+<!--    </el-dialog>-->
+
+
+
+
+
+
+<!--  </div>-->
+
+
+<!--</template>-->
+<!--<script>-->
+<!--import * as Three from 'three'-->
+<!--import {STLLoader} from 'three/examples/jsm/loaders/STLLoader'-->
+<!--import {FBXLoader} from 'three/examples/jsm/loaders/FBXLoader'-->
+<!--import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls'-->
+<!--import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js'-->
+<!--export default {-->
+<!--  name: 'test',-->
+<!--  props: {-->
+<!--    open: {-->
+<!--      type: Boolean,-->
+<!--      default: false-->
+
+<!--    },-->
+<!--    src: {-->
+<!--      type: String,-->
+<!--      default: ''-->
+<!--    }-->
+
+<!--  },-->
+<!--  data() {-->
+<!--    return {-->
+<!--      vloading:true,-->
+<!--      modelopen:false,-->
+<!--      modelsrc:'../static/model/Defeated.fbx',-->
+<!--      // 三维three.js-->
+<!--      camera: null,-->
+<!--      scene: null,-->
+<!--      renderer: null,-->
+<!--      labelRenderer:null,-->
+<!--      mesh: null,-->
+<!--      light:null,-->
+<!--      mixer:null,-->
+<!--      controls:null,-->
+<!--      length:200,-->
+<!--      fullscreen: false,-->
+
+<!--      pointsArray : [],-->
+<!--      window_mouse : true,-->
+
+<!--      mouseclick:false,-->
+<!--      measurebool:false,-->
+<!--      measuretype:0,-->
+<!--      objects:[],-->
+<!--      points:[],-->
+<!--      modelmesh:null,-->
+<!--      particleMaterial:null,-->
+
+
+<!--      leftmousecdownlocation:null,-->
+
+<!--      // 缓存所有测量信息-->
+<!--      allpointarr:[],-->
+<!--      alllinearr:[],-->
+<!--      alltextarr:[]-->
+
+
+
+
+<!--    }-->
+<!--  },-->
+<!--  watch: {-->
+<!--    open:{-->
+<!--      handler:function(e){-->
+<!--        this.modelopen = e-->
+<!--      }-->
+<!--    },-->
+<!--    modelopen:{-->
+<!--      handler:function(e){-->
+<!--        console.log(e)-->
+<!--        if (e==false) {-->
+
+<!--          this.$emit('modelopen', false)-->
+<!--          this.vloading = true-->
+<!--          document.getElementById('container3d').innerHTML = "";-->
+<!--          this.measurebool=false-->
+<!--          this.allpointarr=[]-->
+<!--          this.alllinearr=[]-->
+<!--          this.alltextarr=[]-->
+<!--          this.points=[]-->
+<!--          this.pointsArray=[]-->
+<!--          document.getElementById('chiziicon').style.color=""-->
+<!--          document.getElementById('zhixian').style.opacity="0"-->
+<!--          document.getElementById('quxian').style.opacity="0"-->
+<!--          for (let index = 0; index < this.allpointarr.length; index++) {-->
+<!--            this.scene.remove(this.allpointarr[index])-->
+<!--          }-->
+<!--          for (let index = 0; index < this.alllinearr.length; index++) {-->
+<!--            this.scene.remove(this.alllinearr[index])-->
+<!--          }-->
+<!--          for (let index = 0; index < this.alltextarr.length; index++) {-->
+<!--            this.scene.remove(this.alltextarr[index])-->
+<!--          }-->
+
+
+<!--        }-->
+<!--      }-->
+<!--    },-->
+<!--    src:{-->
+<!--      handler:function(e){-->
+<!--        console.log(e)-->
+<!--        this.modelsrc=e-->
+
+<!--      }-->
+<!--    }-->
+<!--  },-->
+<!--  mounted() {-->
+<!--    var that = this-->
+<!--    window.onresize = function(){-->
+<!--      if(that.modelopen==true){-->
+<!--        console.log('eeeeessssccc')-->
+<!--        document.getElementById('container3d').innerHTML = "";-->
+<!--        setTimeout(function()  {-->
+
+<!--          that.init3d()-->
+
+<!--        }, 1000);-->
+
+
+<!--        setTimeout(function()  {-->
+
+<!--          that.animate3d()-->
+
+<!--        }, 1000);-->
+<!--        that.fullscreen = !that.fullscreen;-->
+<!--        if (that.fullscreen==true) {-->
+<!--          document.getElementById('container3d').style.height = "94vh";-->
+<!--        }else{-->
+<!--          document.getElementById('container3d').style.height = "500px";-->
+<!--        }-->
+<!--      }-->
+<!--    };-->
+<!--  },-->
+
+<!--  methods: {-->
+<!--    opendialog(){-->
+<!--      console.log(11111112)-->
+<!--      var _this = this-->
+
+<!--      setTimeout(function()  {-->
+
+<!--        _this.init3d()-->
+
+<!--      }, 1000);-->
+
+
+
+<!--    },-->
+<!--    // 三维three.js-->
+<!--    init3d: function(){-->
+<!--      let container = document.getElementById('container3d');-->
+<!--      console.log(container)-->
+
+<!--      this.vloading=true-->
+
+<!--      this.scene = new Three.Scene();-->
+<!--      this.scene.background = new Three.Color( 0xa0a0a0 );-->
+
+<!--      this.light = new Three.HemisphereLight(0xffffff, 0x444444);-->
+<!--      this.light.position.set( 0, 200, 0 );-->
+<!--      this.scene.add( this.light );-->
+
+<!--      this.light = new Three.DirectionalLight( 0xffffff );-->
+<!--      this.light.position.set( 0, 200, 100 );-->
+<!--      this.light.castShadow = true;-->
+<!--      this.light.shadow.camera.top = 180;-->
+<!--      this.light.shadow.camera.bottom = - 100;-->
+<!--      this.light.shadow.camera.left = - 120;-->
+<!--      this.light.shadow.camera.right = 120;-->
+<!--      this.scene.add( this.light );-->
+
+<!--      var PI2 = Math.PI * 2;-->
+<!--      this.particleMaterial = new Three.SpriteMaterial( {-->
+
+<!--        color: 0xff0000,-->
+<!--        program: function ( context ) {-->
+
+<!--          context.beginPath();-->
+<!--          context.arc( 0, 0, 0.5, 0, PI2, true );-->
+<!--          context.fill();-->
+
+<!--        }-->
+
+<!--      } );-->
+<!--      var loader = new FBXLoader();-->
+<!--      // modelsrc为模型路径-->
+<!--      loader.load(this.modelsrc,geometry =>{-->
+<!--        console.log(geometry)-->
+<!--        this.scene.add (geometry)-->
+<!--        this.modelmesh = geometry-->
+
+
+<!--        // 相机随着模型的大小初始化位置-->
+<!--        var boxHelper = new Three.BoxHelper()-->
+<!--        this.camera = new Three.PerspectiveCamera(70, container.clientWidth/container.clientHeight, 1, 10000);-->
+<!--        boxHelper.setFromObject(geometry)-->
+<!--        var center = boxHelper.geometry.boundingSphere.center-->
+<!--        var radius = boxHelper.geometry.boundingSphere.radius-->
+<!--        var cameraPos = new Three.Vector3(center.x+geometry.position.x,radius * .8 +center.y+geometry.position.y,radius * 1.5 + center.z + geometry.position.z)-->
+<!--        var lookPos = new Three.Vector3(center.x+geometry.position.x,center.y+geometry.position.y,center.z+geometry.position.z);-->
+<!--        this.camera.position.copy(cameraPos)-->
+
+<!--        this.renderer = new Three.WebGLRenderer({antialias:true})-->
+
+<!--        this.renderer.setSize( container.clientWidth,container.clientHeight );-->
+
+<!--        container.appendChild( this.renderer.domElement );-->
+
+<!--        // 标签render-->
+<!--        this.labelRenderer = new CSS2DRenderer();-->
+<!--        this.labelRenderer.setSize( container.clientWidth,container.clientHeight );-->
+<!--        this.labelRenderer.domElement.style.position = 'absolute';-->
+<!--        this.labelRenderer.domElement.style.top = '0px';-->
+<!--        container.appendChild( this.labelRenderer.domElement );-->
+
+<!--        window.addEventListener( 'resize', this.onWindowResize(), false );-->
+<!--        this.controls = new OrbitControls( this.camera, this.labelRenderer.domElement );-->
+<!--        this.controls.target = lookPos-->
+<!--        this.camera.lookAt(lookPos)-->
+
+<!--        // 全屏切换的时候如果开着测量模式先初始化-->
+<!--        if(this.measurebool==true){-->
+<!--          for (let index = 0; index < this.allpointarr.length; index++) {-->
+<!--            this.scene.add(this.allpointarr[index])-->
+<!--          }-->
+<!--          for (let index = 0; index < this.alllinearr.length; index++) {-->
+<!--            this.scene.add(this.alllinearr[index])-->
+<!--          }-->
+<!--          for (let index = 0; index < this.alltextarr.length; index++) {-->
+<!--            this.scene.add(this.alltextarr[index])-->
+<!--          }-->
+<!--        }-->
+<!--        var _this = this-->
+<!--        setTimeout(function()  {-->
+
+<!--          _this.animate3d()-->
+<!--          _this.vloading = false-->
+
+<!--        }, 1000);-->
+
+
+<!--      })-->
+
+
+
+
+<!--    },-->
+<!--    animate3d: function() {-->
+<!--      requestAnimationFrame(this.animate3d);-->
+<!--      this.renderer.render(this.scene,this.camera)-->
+<!--      this.labelRenderer.render(this.scene,this.camera)-->
+<!--      this.controls.update()-->
+<!--    },-->
+<!--    onWindowResize() {-->
+<!--      let container = document.getElementById('container3d');-->
+<!--      this.camera.aspect = container.clientWidth / container.clientHeight;-->
+<!--      this.camera.updateProjectionMatrix();-->
+
+<!--      this.renderer.setSize( container.clientWidth, container.clientHeight );-->
+
+<!--    },-->
+<!--    fillwindow(){-->
+<!--      let element = document.getElementById('fullcontent')-->
+<!--      let content = document.getElementById('container3d')-->
+
+<!--      if (this.fullscreen) {-->
+
+<!--        if (document.exitFullscreen) {-->
+<!--          document.exitFullscreen();-->
+<!--        } else if (document.webkitCancelFullScreen) {-->
+<!--          document.webkitCancelFullScreen();-->
+<!--        } else if (document.mozCancelFullScreen) {-->
+<!--          document.mozCancelFullScreen();-->
+<!--        } else if (document.msExitFullscreen) {-->
+<!--          document.msExitFullscreen();-->
+<!--        }-->
+<!--      } else {-->
+
+<!--        console.log(element.style.width)-->
+<!--        if (element.requestFullscreen) {-->
+<!--          element.requestFullscreen();-->
+<!--        } else if (element.webkitRequestFullScreen) {-->
+<!--          element.webkitRequestFullScreen();-->
+<!--        } else if (element.mozRequestFullScreen) {-->
+<!--          element.mozRequestFullScreen();-->
+<!--        } else if (element.msRequestFullscreen) {-->
+<!--          // IE11-->
+<!--          element.msRequestFullscreen();-->
+<!--        }-->
+<!--      }-->
+
+
+
+<!--    },-->
+<!--    // 测量模式-->
+<!--    measure(){-->
+<!--      console.log(11111111111111111)-->
+<!--      this.measurebool = !this.measurebool-->
+<!--      if (this.measurebool==true) {-->
+<!--        document.getElementById('chiziicon').style.color="red"-->
+<!--        document.getElementById('zhixian').style.opacity="1"-->
+<!--        document.getElementById('quxian').style.opacity="1"-->
+<!--        if (this.measuretype==0) {-->
+<!--          document.getElementById('zhixian').style.color="red"-->
+<!--        }else{-->
+<!--          document.getElementById('quxian').style.color="red"-->
+<!--        }-->
+
+<!--      }else{-->
+<!--        document.getElementById('chiziicon').style.color=""-->
+<!--        document.getElementById('zhixian').style.opacity="0"-->
+<!--        document.getElementById('quxian').style.opacity="0"-->
+<!--        for (let index = 0; index < this.allpointarr.length; index++) {-->
+<!--          this.scene.remove(this.allpointarr[index])-->
+<!--        }-->
+<!--        for (let index = 0; index < this.alllinearr.length; index++) {-->
+<!--          this.scene.remove(this.alllinearr[index])-->
+<!--        }-->
+<!--        for (let index = 0; index < this.alltextarr.length; index++) {-->
+<!--          this.scene.remove(this.alltextarr[index])-->
+<!--        }-->
+<!--        this.allpointarr=[]-->
+<!--        this.alllinearr=[]-->
+<!--        this.alltextarr=[]-->
+<!--        this.points=[]-->
+<!--        this.pointsArray=[]-->
+
+
+<!--      }-->
+
+<!--    },-->
+<!--    measuretypeclick(e){-->
+<!--      if (this.measurebool==true) {-->
+<!--        this.measuretype = e-->
+<!--        if (e==0) {-->
+<!--          document.getElementById('zhixian').style.color="red"-->
+<!--          document.getElementById('quxian').style.color=""-->
+<!--        }else{-->
+<!--          document.getElementById('zhixian').style.color=""-->
+<!--          document.getElementById('quxian').style.color="red"-->
+<!--        }-->
+<!--      }-->
+
+<!--    },-->
+
+<!--    // 获得射线与平面相交的交点-->
+<!--    getIntersects(event){-->
+<!--      let container = document.getElementById('container3d');-->
+<!--      var raycaster = new Three.Raycaster();-->
+<!--      var mouse = new Three.Vector2();-->
+<!--      mouse.x = (event.clientX/container.clientWidth) * 2 - 1;-->
+<!--      mouse.y = -(event.clientY/container.clientWidth) * 2 + 1;-->
+<!--      var normal = new Three.Vector3(0,1,0);-->
+
+<!--      var planeGround = new Three.Plane(normal,0);-->
+
+<!--      raycaster.setFromCamera(mouse,this.camera);-->
+
+<!--      var ray = raycaster.ray;-->
+
+<!--      var intersects = ray.intersectPlane(planeGround);-->
+<!--      return intersects;-->
+
+<!--    },-->
+
+<!--    /* 鼠标按下事件 */-->
+<!--    onMouseDown(event) {-->
+<!--      if (this.measurebool==true) {-->
+<!--        if (event.button===0) {-->
+<!--          let container = document.getElementById('container3d');-->
+<!--          var mouse = new Three.Vector2();-->
+<!--          var raycaster = new Three.Raycaster();-->
+
+<!--          let getBoundingClientRect = container.getBoundingClientRect()-->
+<!--          let x = ((event.clientX - getBoundingClientRect .left) / container.offsetWidth) * 2 - 1;// 标准设备横坐标-->
+<!--          let y = -((event.clientY - getBoundingClientRect .top) / container.offsetHeight) * 2 + 1;// 标准设备纵坐标-->
+<!--          let standardVector = new Three.Vector3(x, y, 1);// 标准设备坐标-->
+<!--          // 标准设备坐标转世界坐标-->
+<!--          let worldVector = standardVector.unproject(this.camera);-->
+<!--          // 射线投射方向单位向量(worldVector坐标减相机位置坐标)-->
+<!--          let ray = worldVector.sub(this.camera.position).normalize();-->
+<!--          // 创建射线投射器对象-->
+<!--          let rayCaster = new Three.Raycaster(this.camera.position, ray);-->
+<!--          // 返回射线选中的对象 第二个参数如果不填 默认是false-->
+<!--          let intersects = rayCaster.intersectObjects(this.modelmesh.children, true);-->
+
+
+<!--          if ( intersects.length > 0 ) {-->
+<!--            this.leftmousecdownlocation = intersects[ 0 ].point-->
+
+
+<!--          }-->
+<!--        }-->
+
+<!--      }-->
+
+
+
+<!--    },-->
+<!--    drawLine( p1, p2) {-->
+
+<!--      var directionVector = new Three.Vector3();-->
+<!--      var p3 = new Three.Vector3();-->
+<!--      directionVector.x = p2.x - p1.x;-->
+<!--      directionVector.y = p2.y - p1.y;-->
+<!--      directionVector.z = p2.z - p1.z;-->
+<!--      var length = Math.sqrt( directionVector.x * directionVector.x-->
+<!--          + directionVector.y * directionVector.y-->
+<!--          + directionVector.z * directionVector.z);-->
+<!--      var text = Math.round( length*10 ) + "";-->
+<!--      var geometry = new Three.Geometry();-->
+<!--      var material = new Three.LineBasicMaterial( { opacity:1,color:0x00ff00 } );-->
+<!--      geometry.vertices.push(p1);-->
+<!--      geometry.vertices.push(p1);-->
+<!--      geometry.vertices.push(p2);-->
+<!--      var geo = new Three.Line(geometry, material)-->
+<!--      this.alllinearr.push(geo)-->
+<!--      this.scene.add(geo)-->
+<!--      p3.x = (p1.x+p2.x)/2-->
+<!--      p3.y = (p1.y+p2.y)/2-->
+<!--      p3.z = (p1.z+p2.z)/2-->
+<!--      console.log(p3)-->
+<!--      this.initText( text, p3 );-->
+
+
+
+<!--    },-->
+<!--    initText( wordFont, p1){-->
+
+<!--      var font = this.makeTextSprite(wordFont,{-->
+<!--        fontsize: 30,-->
+<!--        borderColor: {r:255, g:0, b:0, a:0.4},/* 边框黑色 */-->
+<!--        backgroundColor: {r:255, g:255, b:255, a:0.9}/* 背景颜色 */-->
+<!--      });-->
+<!--      font.center = new Three.Vector2(0,0)-->
+
+<!--      // console.log(font)-->
+<!--      font.position.copy( p1 );-->
+<!--      this.scene.add(font)-->
+<!--      this.alltextarr.push(font)-->
+
+
+
+<!--    },-->
+<!--    makeTextSprite(message, parameters) {-->
+
+<!--      if ( parameters === undefined ) parameters = {};-->
+
+<!--      var fontface = parameters.hasOwnProperty("fontface") ?-->
+<!--          parameters["fontface"] : "Arial";-->
+
+<!--      /* 字体大小 */-->
+<!--      var fontsize = parameters.hasOwnProperty("fontsize") ?-->
+<!--          parameters["fontsize"] : 16;-->
+
+<!--      /* 边框厚度 */-->
+<!--      var borderThickness = parameters.hasOwnProperty("borderThickness") ?-->
+<!--          parameters["borderThickness"] : 3;-->
+
+<!--      /* 边框颜色 */-->
+<!--      var borderColor = parameters.hasOwnProperty("borderColor") ?-->
+<!--          parameters["borderColor"] : { r:0, g:0, b:0, a:1.0 };-->
+
+<!--      /* 背景颜色 */-->
+<!--      var backgroundColor = parameters.hasOwnProperty("backgroundColor") ?-->
+<!--          parameters["backgroundColor"] : { r:255, g:255, b:255, a:1.0 };-->
+
+<!--      /* 创建画布 */-->
+<!--      var canvas = document.createElement('canvas');-->
+<!--      var context = canvas.getContext('2d');-->
+
+<!--      /* 字体加粗 */-->
+<!--      context.font = "Bold " + fontsize + "px " + fontface;-->
+
+<!--      /* 获取文字的大小数据，高度取决于文字的大小 */-->
+<!--      var metrics = context.measureText( message );-->
+<!--      var textWidth = metrics.width;-->
+
+<!--      /* 背景颜色 */-->
+<!--      context.fillStyle   = "rgba(" + backgroundColor.r + "," + backgroundColor.g + ","-->
+<!--          + backgroundColor.b + "," + backgroundColor.a + ")";-->
+
+<!--      /* 边框的颜色 */-->
+<!--      context.strokeStyle = "rgba(" + borderColor.r + "," + borderColor.g + ","-->
+<!--          + borderColor.b + "," + borderColor.a + ")";-->
+<!--      context.lineWidth = borderThickness;-->
+
+<!--      /* 绘制圆角矩形 */-->
+<!--      this.roundRect(context, 150/2, 125/2, textWidth + 50,  50,1);-->
+<!--      // this.roundRect(context, borderThickness/2, borderThickness/2, textWidth + borderThickness, fontsize * 1.4 + borderThickness,1);-->
+
+<!--      /* 字体颜色 */-->
+<!--      context.fillStyle = "rgba(0, 0, 0, 1.0)";-->
+<!--      console.log(borderThickness)-->
+<!--      console.log(fontsize + borderThickness)-->
+<!--      context.fillText( message, 100, 100);-->
+<!--      // console.log(context)-->
+<!--      // 创建标签-->
+
+
+<!--      var moonLabel = new CSS2DObject( canvas );-->
+<!--      return moonLabel-->
+
+
+
+<!--    },-->
+
+<!--    roundRect(ctx, x, y, w, h, r) {-->
+
+<!--      ctx.beginPath();-->
+<!--      ctx.moveTo(x+r, y);-->
+<!--      ctx.lineTo(x+w-r, y);-->
+<!--      ctx.quadraticCurveTo(x+w, y, x+w, y+r);-->
+<!--      ctx.lineTo(x+w, y+h-r);-->
+<!--      ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);-->
+<!--      ctx.lineTo(x+r, y+h);-->
+<!--      ctx.quadraticCurveTo(x, y+h, x, y+h-r);-->
+<!--      ctx.lineTo(x, y+r);-->
+<!--      ctx.quadraticCurveTo(x, y, x+r, y);-->
+<!--      ctx.closePath();-->
+<!--      ctx.fill();-->
+<!--      ctx.stroke();-->
+
+<!--    },-->
+
+
+
+<!--    // 鼠标松开-->
+<!--    onMouseUp(event){-->
+<!--      // this.mouseclick=false-->
+<!--      // this.window_mouse = false;-->
+<!--      if (this.measurebool==true) {-->
+<!--        if(event.button===0){-->
+<!--          if (this.leftmousecdownlocation != null) {-->
+<!--            let container = document.getElementById('container3d');-->
+<!--            var mouse = new Three.Vector2();-->
+<!--            var raycaster = new Three.Raycaster();-->
+
+<!--            let getBoundingClientRect = container.getBoundingClientRect()-->
+<!--            let x = ((event.clientX - getBoundingClientRect .left) / container.offsetWidth) * 2 - 1;// 标准设备横坐标-->
+<!--            let y = -((event.clientY - getBoundingClientRect .top) / container.offsetHeight) * 2 + 1;// 标准设备纵坐标-->
+<!--            let standardVector = new Three.Vector3(x, y, 1);// 标准设备坐标-->
+<!--            // 标准设备坐标转世界坐标-->
+<!--            let worldVector = standardVector.unproject(this.camera);-->
+<!--            // 射线投射方向单位向量(worldVector坐标减相机位置坐标)-->
+<!--            let ray = worldVector.sub(this.camera.position).normalize();-->
+<!--            // 创建射线投射器对象-->
+<!--            let rayCaster = new Three.Raycaster(this.camera.position, ray);-->
+<!--            // 返回射线选中的对象 第二个参数如果不填 默认是false-->
+<!--            let intersects = rayCaster.intersectObjects(this.modelmesh.children, true);-->
+<!--            // console.log(intersects)-->
+<!--            if ( intersects.length > 0 ) {-->
+<!--              console.log(this.leftmousecdownlocation)-->
+<!--              console.log(intersects[ 0 ].point)-->
+<!--              var downnum = this.leftmousecdownlocation.x+this.leftmousecdownlocation.y+this.leftmousecdownlocation.z-->
+<!--              var upnum = intersects[ 0 ].point.x+intersects[ 0 ].point.y+intersects[ 0 ].point.z-->
+<!--              if (downnum==upnum) {-->
+<!--                //创建粒子，便于标识点击位置-->
+<!--                console.log('createspi')-->
+<!--                var particle = new Three.Sprite( this.particleMaterial );-->
+<!--                if (this.measuretype==0 && this.points.length>0) {-->
+<!--                  console.log(11222)-->
+<!--                  var xx = Math.abs(this.points[0].x - intersects[ 0 ].point.x)-->
+<!--                  var yy = Math.abs(this.points[0].y - intersects[ 0 ].point.y)-->
+<!--                  var zz = Math.abs(this.points[0].z - intersects[ 0 ].point.z)-->
+
+<!--                  if (xx>yy&&xx>zz) {-->
+<!--                    var location = new Three.Vector3(intersects[ 0 ].point.x, this.points[0].y,this.points[0].z)-->
+
+<!--                  }else if (yy>xx&&yy>zz) {-->
+<!--                    var location = new Three.Vector3(this.points[0].x,intersects[ 0 ].point.y, this.points[0].z)-->
+
+<!--                  }-->
+<!--                  else if (zz>xx&&zz>yy) {-->
+<!--                    var location = new Three.Vector3(this.points[0].x,this.points[0].y,intersects[ 0 ].point.z)-->
+
+<!--                  }-->
+<!--                  particle.position.copy(location);-->
+<!--                  //保存选中点-->
+<!--                  // var point = intersects[ 0 ].point-->
+<!--                  // point = location-->
+<!--                  this.points.push( location );-->
+<!--                }else{-->
+<!--                  particle.position.copy( intersects[ 0 ].point );-->
+<!--                  //保存选中点-->
+<!--                  this.points.push( intersects[ 0 ].point );-->
+<!--                }-->
+
+<!--                particle.scale.x = particle.scale.y = 10;-->
+<!--                this.scene.add( particle );-->
+<!--                this.allpointarr.push(particle)-->
+<!--                this.leftmousecdownlocation = null-->
+
+
+
+<!--                if( this.points.length >1 ) {-->
+
+<!--                  var p2 = this.points[this.points.length-1];-->
+<!--                  var p1 = this.points[this.points.length-2];-->
+<!--                  this.points = []-->
+<!--                  //动画的形式画线-->
+<!--                  this.drawLine( p1, p2);-->
+
+<!--                }-->
+
+<!--              }-->
+<!--            }-->
+<!--          }-->
+<!--        }-->
+<!--      }-->
+<!--    },-->
+
+
+
+<!--  }-->
+<!--}-->
+<!--</script>-->
+<!--<style   scoped>-->
+<!--#container3d{-->
+<!--  /* height: 500px;-->
+<!--  width: 100%; */-->
+<!--  /* background: red; */-->
+<!--}-->
+
+
+<!--</style>-->
+<!--<style >-->
+<!--.yzqmodeldialog .el-dialog__body{-->
+<!--  padding-top: 0;-->
+<!--}-->
+<!--</style>-->
