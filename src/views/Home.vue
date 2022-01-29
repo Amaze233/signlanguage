@@ -1,5 +1,5 @@
 <template>
-  <div class="home">
+  <div class="home" id="index">
     <ScrollTop/>
     <Carousel style="margin-top: 20px"/>
     <div id="introduction" >
@@ -10,12 +10,44 @@
         驱车策驽马，游戏宛与洛。</p>
       <button>了解详情</button>
     </div>
-    <div id="lesson" >
-      <div class="button_block" @click="toRouter('dictionary')">
-        学习
+    <div id="lesson">
+      <h3>学习</h3>
+      <span class="underline"></span>
+      <div id="lesson_list" >
+        <div class="button_block" @click="toRouter('dictionary','初级篇','学习')">
+          <div class="lessonLinkPic1"></div>
+          <div class="lessonLinkText">
+            <p class="lessonLinkTitle">初级篇</p>
+            <p class="lessonLinkIntro">适用于刚开始学习手语的人群</p>
+          </div>
+        </div>
+        <div class="button_block" @click="toRouter('dictionary','高级篇','学习')">
+          <div class="lessonLinkPic1"></div>
+          <div class="lessonLinkText">
+            <p class="lessonLinkTitle">高级篇</p>
+            <p class="lessonLinkIntro">适用于对手语有一定了解的人群</p>
+          </div>
+        </div>
       </div>
-      <div class="button_block" @click="toRouter('homework')">
-        作业
+    </div>
+    <div id="homework">
+      <h3>测试</h3>
+      <span class="underline"></span>
+      <div id="homework_list" >
+        <div class="button_block" @click="toRouter('homework','初级篇','测试')">
+          <div class="lessonLinkPic1"></div>
+          <div class="lessonLinkText">
+            <p class="lessonLinkTitle">初级篇</p>
+            <p class="lessonLinkIntro">适用于刚开始学习手语的人群</p>
+          </div>
+        </div>
+        <div class="button_block" @click="toRouter('homework','高级篇','测试')">
+          <div class="lessonLinkPic1"></div>
+          <div class="lessonLinkText">
+            <p class="lessonLinkTitle">高级篇</p>
+            <p class="lessonLinkIntro">适用于对手语有一定了解的人群</p>
+          </div>
+        </div>
       </div>
     </div>
     <globle-mousealert/>
@@ -32,6 +64,9 @@ export default {
   name: 'Home',
   bannerHeight: 300,
   introductionHeight:300,
+  username:'',
+  inject:['reload'],
+  i:0,
   data(){
     return{
     }
@@ -46,7 +81,10 @@ export default {
       // 通过浏览器宽度(图片宽度)计算高度
       this.bannerHeight = (1 / 2) * (1080 / 1920) * this.screenWidth;
     },
-    toRouter(str){
+    toRouter(str,rank,type){
+      //本地缓存选择的信息
+      sessionStorage.setItem("rank", rank)  // 缓存分级信息
+      sessionStorage.setItem("type", type)  // 缓存用户信息
       this.$router.push('/'+str);
       console.log(str)
     }
@@ -60,13 +98,17 @@ export default {
       this.screenWidth =  window.innerWidth;
       this.setSize();
     }
+  },
+  created() {
+    this.username = JSON.parse(sessionStorage.getItem("user"));
+
   }
 }
 </script>
 <style lang="less">
 #introduction {
   width: 100%;
-  height: 35vh;
+  height: 33vh;
   background-color: #ffffff;
   display: flex;
   justify-content: center;
@@ -84,39 +126,120 @@ export default {
     border: solid 1px #c9c9c9;
     color: #ffffff;
     background-color: #40b3ff;
-    transition: all 300ms ease-in-out;
+    transition: all 300ms ease-out;
   }
   button:hover {
     transition: all 300ms ease-in-out;
     width: 172px;
+    cursor: pointer;
     background: linear-gradient(
         to right,
-        #66c2fc 0%,
-        #abd8ff 50%,
-        #66c2fc 100%
+        #40b3ff 0%,
+        #7cc1ff 50%,
+        #40b3ff 100%
     );
   }
 }
 
+.underline {
+  position: absolute;
+  left: 20%;
+  margin-top: -10px;
+  width: 100px;
+  height: 3px;
+  background-color: #40b3ff;
+}
+
 #lesson{
-  height: 50vh;
+  height: 500px;
+  h3{
+    padding-left: 20%;
+    //font-weight: 400;
+    //font-size: 30px;
+    font-size: 34px;
+    font-weight: 700;
+    color: var(--txt-b-pure);
+    transition: .25s;
+
+    margin-block-start: 1em;
+    margin-block-end: 1em;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+  }
+
+}
+
+#lesson_list{
+  height: 360px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  padding-left: 20%;
+}
+
+#homework{
+  background: #fff;
+  height: 500px;
+  h3{
+    padding-top: 30px;
+    background: #fff;
+    padding-left: 20%;
+    //font-weight: 400;
+    //font-size: 30px;
+    font-size: 34px;
+    font-weight: 700;
+    color: var(--txt-b-pure);
+    transition: .25s;
+
+    margin-block-start: 1em;
+    margin-block-end: 1em;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+  }
+
+}
+
+#homework_list{
+  height: 360px;
+  display: flex;
+  align-items: center;
+  padding-left: 20%;
 }
 
 .button_block{
-  width: 20vw;
-  height: 35vh;
-  margin: 20px;
-  background: #409EFF;
+  width: 300px;
+  height: 250px;
+  margin: 0 30px 0 0;
+  background: #fff;
   border-radius: 10px ;
-  color : white;
-  font-size: 28px;
   font-family:serif;
   font-sytle: bold;
-  text-align:center;
-  line-height:35vh;
+
+  .lessonLinkText{
+    padding: 10px 20px ;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .lessonLinkTitle {
+    margin: 5px 0 0;
+    color: var(--txt-b-pure);
+    font-size: 15px !important;
+    font-family: "Microsoft Yahei",PingFangSC-Regular;
+    font-weight: 700;
+  }
+
+  .lessonLinkIntro{
+    margin: 1px 0 0;
+    color: var(--txt-b-pure);
+    font-size: small;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  -webkit-box-shadow: #ccc 0 5px 5px;
+  -moz-box-shadow: #ccc 0 5px 5px;
+  box-shadow: #ccc 0 5px 5px;
   transition-duration: 0.3s;
   transition-property: transform;
 }
@@ -128,5 +251,12 @@ export default {
   box-shadow: #ccc 0px 10px 10px;
 }
 
+.lessonLinkPic1{
+  width: 300px;
+  height: 170px;
+  background-image: url("../assets/img/4.jpg");
+  background-size: 100% 100%;
+  border-radius: 10px 10px 0 0;
+}
 
 </style>

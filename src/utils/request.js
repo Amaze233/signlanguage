@@ -13,10 +13,10 @@ request.interceptors.request.use(config => {
 
     // config.headers['token'] = user.token;  // 设置请求头
     //无用户信息则直接返回登录界面
-    const teamJson = sessionStorage.getItem("team")
-    if (!teamJson){
-        router.push('/login')
-    }
+    // const teamJson = sessionStorage.getItem("team")
+    // if (!teamJson){
+    //     router.push('/login')
+    // }
 
     return config
 }, error => {

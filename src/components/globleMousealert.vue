@@ -81,6 +81,7 @@ export default {
   animation: breathe 3s ease-in-out infinite;
   z-index: 999;
   bottom: 0;
+  cursor: pointer;
   .content {
     width: 109px;
     height: 69px;

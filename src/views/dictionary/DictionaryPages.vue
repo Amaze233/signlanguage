@@ -10,6 +10,7 @@
     <BreadCrumb/>
     <h1>{{word}}</h1>
     <a>{{description}}</a>
+    <ScrollTop/>
   </div>
 </template>
 
@@ -20,10 +21,12 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader";
 import {inflate} from "three/examples/jsm/libs/fflate.module.js"
 import BreadCrumb from "../../components/BreadCrumb";
+import ScrollTop from "../../components/ScrollTop";
 
 export default{
   name:'test',
   components:{
+    ScrollTop,
     BreadCrumb
   },
   data(){
@@ -35,7 +38,7 @@ export default{
       mixer:null,
       mixers:[],
       clock: new THREE.Clock(),
-      modelPath: "static/model/12.fbx",
+      modelPath: "static/model/111.fbx",
       word:"情况",
       description:"我也不知道该咋描述"
     }
@@ -44,6 +47,7 @@ export default{
     init() {
       let self = this;
 
+      //摄像机
       let container = document.getElementById("contain");
       // let mouse = new THREE.Vector2();
       self.camera = new THREE.PerspectiveCamera(
@@ -52,8 +56,9 @@ export default{
           0.01,
           2000
       );
-      self.camera.position.set(0, 100, 100);
+      self.camera.position.set(0, 75, 120);
       self.scene = new THREE.Scene();
+
       // 地板
       var mesh = new THREE.Mesh(
           new THREE.PlaneBufferGeometry(2000, 2000),
@@ -84,7 +89,7 @@ export default{
 
       //光照
       var light = new THREE.HemisphereLight(0xffffff, 0x444444);
-      light.position.set(0, 200, 0);
+      light.position.set(200, 200, 0);
       self.scene.add(light);
 
       light = new THREE.DirectionalLight(0xffffff);
@@ -95,9 +100,12 @@ export default{
       light.shadow.camera.left = -120;
       light.shadow.camera.right = 120;
       self.scene.add(light);
+
+      //加载模型
       const mixers = self.mixers;
       const fbxLoader = new FBXLoader();
       fbxLoader.load(self.modelPath, function(object) {
+        console.log(object)
         object.mixer = new THREE.AnimationMixer(object);
         mixers.push(object.mixer)
         var action = object.mixer.clipAction(object.animations[0]);
@@ -128,7 +136,7 @@ export default{
 <style lang="less">
 #contain{
   margin: 20px;
-  max-width: 70%;
+  max-width: calc(70vw - 200px);
   box-shadow:0 0 25px #909399;
   h1{
     margin-left: 20px;
