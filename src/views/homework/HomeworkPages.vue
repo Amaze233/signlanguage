@@ -1,9 +1,6 @@
 <template>
   <div class="mainPages">
     <BreadCrumb/>
-    <form style="display: none">
-      <el-input v-model="form.question"></el-input>
-    </form>
     <h1 style="margin: 20px">{{this.form.question}}</h1>
     <div class="recorder-wrapper">
       <div class="phone-content">
@@ -26,22 +23,70 @@
                x-webkit-airplay="allow"
                x5-video-player-type="h5-page"
                x5-video-orientation="portraint"
-               style="object-fit:cover;"
+               style="object-fit: contain"
                @click="showVideo(false)"
                @touchend.prevent="showVideo(false)"></video>
       </div>
       <canvas ref="canvas"></canvas>
       <div class="show-video">
-        <video-player class="video-player vjs-custom-skin"
-                      ref="videoPlayer"
-                      :playsinline="true"
-                      :options="playerOptions">
-        </video-player>
+        <div class="player">
+          <video-player  class="video-player vjs-custom-skin"
+                         ref="videoPlayer"
+                         :playsinline="true"
+                         :options="playerOptions"
+                         @play="onPlayerPlay($event)"
+                         @pause="onPlayerPause($event)"
+          >
+          </video-player>
+        </div>
       </div>
     </div>
+    <form style="display: none">
+      <el-input v-model="form.question"></el-input>
+      <el-input v-model="form.video_path"></el-input>
+    </form>
     <el-button type="primary" @click="onMousedown" plain style="margin-left: 20px">开始录制</el-button>
     <el-button type="primary" @click="onMouseup" plain>停止录制</el-button>
-    <el-button type="primary" @click="upload" plain>提交</el-button>
+    <el-button type="primary" @click="video_upload('/001')" plain>提交</el-button>
+    <div v-if="boolList" style="margin: 10px;padding: 20px">
+      <el-table
+          ref="filterTable"
+          :data="boolList"
+          style="width: 100%">
+        <el-table-column
+            prop="word_id"
+            label="分词"
+            sortable
+            width="100"
+            :filter-method="filterHandler"
+        >
+        </el-table-column>
+        <el-table-column
+            prop="correction"
+            label="标签"
+            width="100"
+            :filters="[{ text: '正确', value: 1 }, { text: '错误', value: 0 }]"
+            :filter-method="filterTag"
+            filter-placement="bottom-end">
+          <template slot-scope="scope">
+            <el-tag
+                :type="scope.row.correction === '家' ? 'success' : 'danger'"
+                disable-transitions>{{scope.row.correction}}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column
+            width="100"
+            label="操作">
+          <template slot-scope="scope">
+            <el-button
+                size="mini"
+                @click="toPages(scope.row)"
+                icon="el-icon-edit-outline"
+            >前往</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
     <ScrollTop/>
   </div>
 </template>
@@ -50,6 +95,10 @@
 
 import BreadCrumb from "../../components/BreadCrumb";
 import ScrollTop from "../../components/ScrollTop";
+import 'video.js/dist/video-js.css'
+import 'vue-video-player/src/custom-theme.css'
+import { videoPlayer } from 'vue-video-player';
+import request from "../../utils/request";
 
 export default {
   name: 'HomeworkPages',
@@ -57,49 +106,72 @@ export default {
     return{
       form:{
       },
+      boolList:[],
       chunks: [],
       chunkList: [],
       index: 0,
       swicth: 0,
       playerOptions: {
-        playbackRates: [0.5, 1.0, 1.5, 2.0], // 可选的播放速度
-        autoplay: false, // 如果为true,浏览器准备好时开始回放。
+        playbackRates: [0.7, 1.0, 1.5, 2.0], //播放速度
+        autoplay: false, //如果true,浏览器准备好时开始回放。
         muted: false, // 默认情况下将会消除任何音频。
-        loop: false, // 是否视频一结束就重新开始。
+        loop: false, // 导致视频一结束就重新开始。
         preload: 'auto', // 建议浏览器在<video>加载元素后是否应该开始下载视频数据。auto浏览器选择最佳行为,立即开始加载视频（如果浏览器支持）
         language: 'zh-CN',
         aspectRatio: '16:9', // 将播放器置于流畅模式，并在计算播放器的动态大小时使用该值。值应该代表一个比例 - 用冒号分隔的两个数字（例如"16:9"或"4:3"）
         fluid: true, // 当true时，Video.js player将拥有流体大小。换句话说，它将按比例缩放以适应其容器。
         sources: [{
-          type: "video/mp4", // 类型
-          src: '' // url地址
+          type: "video/mp4",
+          src: require("../../assets/video/test~1.mp4")
         }],
-        poster: '', // 封面地址
-        notSupportedMessage: '此视频暂无法播放，请稍后再试', // 允许覆盖Video.js无法播放媒体源时显示的默认信息。
+        poster: "", //你的封面地址
+        width: document.documentElement.clientWidth,
+        notSupportedMessage: '此视频暂无法播放，请稍后再试', //允许覆盖Video.js无法播放媒体源时显示的默认信息。
         controlBar: {
-          timeDivider: true, // 当前时间和持续时间的分隔符
-          durationDisplay: true, // 显示持续时间
-          remainingTimeDisplay: false, // 是否显示剩余时间功能
-          fullscreenToggle: true // 是否显示全屏按钮
+          timeDivider: true,
+          durationDisplay: true,
+          remainingTimeDisplay: false,
+          fullscreenToggle: true  //全屏按钮
         }
       }
     }
   },
   components: {
     ScrollTop,
-    BreadCrumb
+    BreadCrumb,
+    videoPlayer
+  },
+  computed: {
+    player() {
+      return this.$refs.videoPlayer.player
+    }
   },
   methods: {
+    onPlayerPlay(player) {
+    },
+    onPlayerPause(player){
+    },
     requestAudioAccess () {
       navigator.mediaDevices.getUserMedia({audio: true, video: true}).then(stream => {
         this.recorder = new window.MediaRecorder(stream);
+        // this.recorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264_STREAM_TYPE);//设置视频编码
         this.stream = stream;
         this.bindEvents();
       }, error => {
         alert('出错，请确保已允许浏览器获取音视频权限');
       });
     },
-
+    toPages(row){
+      this.$router.push(
+          {
+            path: '/dictionaryPages',
+            query:{
+              word: row.word_id
+            }
+          }
+      )
+      this.reload()
+    },
     onMousedown () {
       this.showVideo(true);
       this.onPreview();
@@ -137,11 +209,12 @@ export default {
       this.swicth = index;
       this.showVideo(true);
       let item = this.chunkList[index];
-      console.log(this.chunkList[index]);
       console.log(this.swicth);
+      console.log(item);
       this.video.src = item.stream;
       this.video.muted = false;
       this.video.play();
+
 
       this.bindAudioEvent();
     },
@@ -162,7 +235,7 @@ export default {
     },
 
     saveRecordingData  () {
-      let blob = new Blob(this.chunks, { 'type' : 'video/mp4' }),
+      let blob = new Blob(this.chunks, { 'type' : 'video/mp4'}),
           videoStream = URL.createObjectURL(blob);
       this.chunkList.push({stream: videoStream});
       console.log("视频流")
@@ -187,8 +260,28 @@ export default {
       this.showVideo(false);
       this.video.srcObject = null;
     },
-    upload(){
-
+    video_upload(video_path){
+      this.form.video_path = video_path;
+      request.post('/api/video',this.form).then(res=>{
+        this.boolList = res;
+        console.log(res)
+      })
+    },
+    resetDateFilter() {
+      this.$refs.filterTable.clearFilter('date');
+    },
+    clearFilter() {
+      this.$refs.filterTable.clearFilter();
+    },
+    formatter(row, column) {
+      return row.address;
+    },
+    filterTag(value, row) {
+      return row.tag === value;
+    },
+    filterHandler(value, row, column) {
+      const property = column['property'];
+      return row[property] === value;
     }
 
   },
@@ -196,6 +289,7 @@ export default {
     this.form.question = this.$route.query.question
     console.log("开始")
     console.log(this.form)
+    console.log("源"+this.playerOptions.sources)
   },
   mounted () {
     if (!navigator.mediaDevices) {
@@ -227,6 +321,7 @@ export default {
   display: flex;
 }
 .show-video{
+  background-color: black;
   width: calc(70vw - 440px);
   height: calc(39vw - 248px);
   margin: 0 10px;
@@ -234,9 +329,10 @@ export default {
 
 #phone-video
 {
-  width: 20vw;
-  margin-top: 300px;
-  margin-right: 500px;
+  width: 900px;
+  height: 500px;
+  margin:220px 300px 0 770px;
+  z-index: 10;
 }
 
 .phone-head span {

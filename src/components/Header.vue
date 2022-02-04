@@ -10,9 +10,11 @@
     <div id="title" @click="toRouter('home')">手语教育</div>
     <div style="flex: 1"></div>
     <div id="input">
-      <el-input placeholder="请输入要查询的内容" v-model="input" class="input-with-select">
-        <el-button slot="append" icon="el-icon-search"></el-button>
-      </el-input>
+      <form>
+        <el-input placeholder="请输入要查询的内容" v-model="form.word" class="input-with-select">
+          <el-button slot="append" icon="el-icon-search" @click="toPages()"></el-button>
+        </el-input>
+      </form>
     </div>
     <div >
       <div id="navLinkBox">
@@ -51,6 +53,8 @@
 </template>
 
 <script>
+import request from "../utils/request";
+
 export default {
   name: "Header",
   data(){
@@ -58,13 +62,31 @@ export default {
       username: '',
       ifLogin: false,
       input: "",
-      inject:['reload']
+      inject:['reload'],
+      form:{}
     }
   },
   methods:{
-  toRouter(str){
+    toRouter(str){
     this.$router.push('/'+str);
     console.log(str)
+    },
+    toPages(){
+      request.post('/api/example',this.form).then(res => {
+        sessionStorage.setItem("word", JSON.stringify(res))  // 缓存返回信息
+        console.log("返回值"+res);
+      })
+      let pageType = '/dictionaryPages';
+      console.log(this.form.word)
+      this.$router.push(
+          {
+            path: pageType,
+            query:{
+              word: this.form.word
+            }
+          }
+      )
+      this.reload()
     }
   },
   created() {

@@ -51,8 +51,9 @@ export default {
       })
     },
     toPages(name){
+      console.log("这里是类别"+sessionStorage.getItem("type"))
       let pageType = '/homeworkPages';
-      if (this.type === "学习"){
+      if (sessionStorage.getItem("type") === '学习'){
         pageType = '/dictionaryPages';
       }
       this.$router.push(

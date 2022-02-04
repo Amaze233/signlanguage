@@ -8,8 +8,11 @@
 <template>
   <div id="contain">
     <BreadCrumb/>
+    <form style="display: none">
+      <el-input v-model="form.word"></el-input>
+    </form>
     <h1>{{word}}</h1>
-    <a>{{description}}</a>
+    <a>{{this.description}}</a>
     <ScrollTop/>
   </div>
 </template>
@@ -22,15 +25,18 @@ import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader";
 import {inflate} from "three/examples/jsm/libs/fflate.module.js"
 import BreadCrumb from "../../components/BreadCrumb";
 import ScrollTop from "../../components/ScrollTop";
+import request from "../../utils/request";
 
 export default{
   name:'test',
+  inject:['reload'],
   components:{
     ScrollTop,
     BreadCrumb
   },
   data(){
     return {
+      form:{},
       camera: null,
       scene: null,
       renderer: null,
@@ -38,9 +44,9 @@ export default{
       mixer:null,
       mixers:[],
       clock: new THREE.Clock(),
-      modelPath: "static/model/111.fbx",
-      word:"情况",
-      description:"我也不知道该咋描述"
+      modelPath: "",
+      word:'',
+      description:''
     }
   },
   methods:{
@@ -104,7 +110,7 @@ export default{
       //加载模型
       const mixers = self.mixers;
       const fbxLoader = new FBXLoader();
-      fbxLoader.load(self.modelPath, function(object) {
+      fbxLoader.load(this.modelPath, function(object) {
         console.log(object)
         object.mixer = new THREE.AnimationMixer(object);
         mixers.push(object.mixer)
@@ -123,7 +129,16 @@ export default{
         }
       }
       this.renderer.render(this.scene, this.camera);
-    }
+    },
+
+  },
+  created() {
+    this.word = this.$route.query.word
+    console.log("开始")
+    this.modelPath = JSON.parse(sessionStorage.getItem("word")).path;
+    this.description = JSON.parse(sessionStorage.getItem("word")).description;
+    console.log(JSON.parse(sessionStorage.getItem("word")));
+    console.log("结束");
   },
   mounted() {
     this.init();
@@ -139,10 +154,15 @@ export default{
   max-width: calc(70vw - 200px);
   box-shadow:0 0 25px #909399;
   h1{
-    margin-left: 20px;
+    font-size: 36px;
+    color: #333333;
+    margin: 20px;
+    font-weight: 600;
   }
   a{
-    margin: 0 0 0 20px;
+    margin-left: 20px;
+    font-size: 18px;
+    line-height: 40px;
   }
   canvas{
     margin-left: 20px;

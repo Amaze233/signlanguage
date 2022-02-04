@@ -2,7 +2,7 @@ import axios from 'axios'
 import router from "../router";
 
 const request = axios.create({
-    timeout: 5000
+    timeout: 15000
 })
 
 // request 拦截器

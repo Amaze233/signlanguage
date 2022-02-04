@@ -20,7 +20,7 @@
           </div>
           <div style="float: right;font-size: 18px">—— 课程团队</div>
         </div>
-        <el-button type="primary" round style="float: right;margin-right: 20px">开始{{type}}</el-button>
+        <el-button type="primary" round style="float: right;margin-right: 20px" @click="start">开始{{type}}</el-button>
       </div>
     </div>
     <div class="study-information">
@@ -56,6 +56,19 @@ export default {
       title: "",
       type:"",
       url: "../../assets/img/lesson-logo.jpg"
+    }
+  },
+  methods:{
+    start() {
+      const id = '021'
+      this.$router.push(
+          {
+            path: '/dictionaryList',
+            query: {
+              id: id
+            }
+          }
+      )
     }
   },
   created() {

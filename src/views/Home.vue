@@ -21,11 +21,18 @@
             <p class="lessonLinkIntro">适用于刚开始学习手语的人群</p>
           </div>
         </div>
+        <div class="button_block" @click="toRouter('dictionary','中级篇','学习')">
+          <div class="lessonLinkPic2"></div>
+          <div class="lessonLinkText">
+            <p class="lessonLinkTitle">中级篇</p>
+            <p class="lessonLinkIntro">适用于对手语有一定了解的人群</p>
+          </div>
+        </div>
         <div class="button_block" @click="toRouter('dictionary','高级篇','学习')">
-          <div class="lessonLinkPic1"></div>
+          <div class="lessonLinkPic3"></div>
           <div class="lessonLinkText">
             <p class="lessonLinkTitle">高级篇</p>
-            <p class="lessonLinkIntro">适用于对手语有一定了解的人群</p>
+            <p class="lessonLinkIntro">适用于熟悉手语使用的人群</p>
           </div>
         </div>
       </div>
@@ -41,11 +48,18 @@
             <p class="lessonLinkIntro">适用于刚开始学习手语的人群</p>
           </div>
         </div>
+        <div class="button_block" @click="toRouter('homework','中级篇','测试')">
+          <div class="lessonLinkPic2"></div>
+          <div class="lessonLinkText">
+            <p class="lessonLinkTitle">中级篇</p>
+            <p class="lessonLinkIntro">适用于对手语有一定了解的人群</p>
+          </div>
+        </div>
         <div class="button_block" @click="toRouter('homework','高级篇','测试')">
-          <div class="lessonLinkPic1"></div>
+          <div class="lessonLinkPic3"></div>
           <div class="lessonLinkText">
             <p class="lessonLinkTitle">高级篇</p>
-            <p class="lessonLinkIntro">适用于对手语有一定了解的人群</p>
+            <p class="lessonLinkIntro">适用于熟悉手语使用的人群</p>
           </div>
         </div>
       </div>
@@ -254,9 +268,25 @@ export default {
 .lessonLinkPic1{
   width: 300px;
   height: 170px;
-  background-image: url("../assets/img/4.jpg");
+  background-image: url("../assets/img/low.png");
   background-size: 100% 100%;
   border-radius: 10px 10px 0 0;
 }
+.lessonLinkPic2{
+  width: 300px;
+  height: 170px;
+  background-image: url("../assets/img/middle.png");
+  background-size: 100% 100%;
+  border-radius: 10px 10px 0 0;
+}
+
+.lessonLinkPic3{
+  width: 300px;
+  height: 170px;
+  background-image: url("../assets/img/high.png");
+  background-size: 100% 100%;
+  border-radius: 10px 10px 0 0;
+}
+
 
 </style>

@@ -4,7 +4,7 @@ import Home from '../views/Home.vue'
 import Layout from "../layout/Layout";
 import Login from "../views/login/Login";
 import Dictionary from "../views/dictionary/Dictionary";
-import test from "../views/test";
+import Test from "../views/Test";
 import DictionaryPages from "../views/dictionary/DictionaryPages";
 import LoginRegister from "../views/login/LoginRegister";
 import HomeworkPages from "../views/homework/HomeworkPages";
@@ -48,18 +48,18 @@ const routes = [
       },
       {
         path: 'dictionaryList',
-        name: 'DictionaryList',
+        name: '学习列表',
         component: DictionaryList
       },
       {
         path: 'dictionaryPages',
-        name: 'DictionaryPages',
+        name: '学习页面',
         component: DictionaryPages
       },
       {
         path: "test",
         name: 'Test',
-        component: test
+        component: Test
       },
       {
         path: "/login",

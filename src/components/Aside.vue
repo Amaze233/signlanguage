@@ -122,10 +122,12 @@ export default {
       console.log(key, keyPath);
     },
     toList(id){
-      let listType = '/homeworkList';
-      if (this.type === "学习"){
-        listType = '/dictionaryList';
+
+      let listType = '/dictionaryList';
+      if (sessionStorage.getItem("type") === '测试'){
+        listType = '/homeworkList';
       }
+      console.log(listType)
       this.$router.push(
           {
             path: listType,
@@ -141,7 +143,7 @@ export default {
     },
     created(){
       this.type = sessionStorage.getItem("type")
-      if (this.type === "学习"){
+      if (sessionStorage.getItem("type") === '学习'){
         this.router = 'dictionaryList'
       }
       this.router = 'homeworkList'
